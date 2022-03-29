@@ -42,7 +42,7 @@ def rgb_white2alpha(rgb, ensure_increasing=False, ensure_linear=False, lsq_linea
     """
     # The most transparent alpha we can use is given by the min of RGB
     # Convert it from saturation to opacity
-    alpha = 1. - np.min(rgb, axis=1)
+    alpha = 255. - np.min(rgb, axis=1)
     if lsq_linear:
         # Make a least squares fit for alpha
         indices = np.arange(len(alpha))
@@ -61,12 +61,13 @@ def rgb_white2alpha(rgb, ensure_increasing=False, ensure_linear=False, lsq_linea
             alpha[i] = a_max = np.maximum(a, a_max)
     alpha = np.expand_dims(alpha, -1)
     # Rescale colors to discount the white that will show through from transparency
-    rgb = (rgb + alpha - 1)
-    rgb = np.divide(rgb, alpha, out=np.zeros_like(rgb), where=(alpha > 0))
-    rgb = np.clip(rgb, 0, 1)
+    rgb = (rgb + alpha - 255)
+    rgb = np.divide(rgb, alpha, out=np.zeros_like(rgb), where=(alpha > 0))*255
+    rgb = np.clip(rgb, 0, 255)
+    rgb = rgb.astype(int)
     # Concatenate our alpha channel
-    rgba = np.concatenate((rgb, alpha), axis=1)
-    return rgba
+    argb = np.concatenate((alpha, rgb), axis=1)
+    return argb
 
 # printing the result to std out
 #np.savetxt(sys.stdout, np.stack(datanew,axis=1), newline='\n')
