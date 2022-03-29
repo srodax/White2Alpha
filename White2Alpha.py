@@ -72,8 +72,10 @@ def rgb_white2alpha(rgb, ensure_increasing=False, ensure_linear=False, lsq_linea
     return argb
 
 # transforms a,r,g,b array into hex string '0xAARRGGBB'
-def argb2hex(argb):
+def argb2hex(argb, alpha255isInvisible=True):
     a, r, g, b = argb
+    if alpha255isInvisible: # because gnuplot treats alpha=255 as fully transparent
+        a = 255 - a
     hexstr = f'{hex(int(a))}{hex(int(r))[2:]:0>2}{hex(int(g))[2:]:0>2}{hex(int(b))[2:]:0>2}'
     return hexstr
 
