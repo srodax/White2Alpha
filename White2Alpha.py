@@ -3,6 +3,8 @@ import numpy as np
 import fileinput
 import sys
 import argparse
+import struct
+from matplotlib.colors import hex2color, rgb2hex
 
 #***********************************************************************
 # Parsing arguments
@@ -12,7 +14,7 @@ parser.add_argument('files', type=str, nargs='*', help='Files with colors to be 
 args = parser.parse_args()
 #***********************************************************************
 # reading data as argument or std input
-data = np.loadtxt(fileinput.input(args.files), dtype=float)
+data = np.loadtxt(fileinput.input(args.files), dtype=str)
 #***********************************************************************
 
 # Taken from [https://stackoverflow.com/a/68809469], [https://colab.research.google.com/drive/1iJ-3ZdJ822JlZgJ3ZtGCyClzT5X7Wk0t#scrollTo=lc0hG1PKrbV3]
@@ -69,6 +71,28 @@ def rgb_white2alpha(rgb, ensure_increasing=False, ensure_linear=False, lsq_linea
     argb = np.concatenate((alpha, rgb), axis=1)
     return argb
 
-# printing the result to std out
-#np.savetxt(sys.stdout, np.stack(datanew,axis=1), newline='\n')
+# transforms a,r,g,b array into hex string '0xAARRGGBB'
+def argb2hex(argb):
+    a, r, g, b = argb
+    hexstr = f'{hex(int(a))}{hex(int(r))[2:]:0>2}{hex(int(g))[2:]:0>2}{hex(int(b))[2:]:0>2}'
+    return hexstr
 
+
+# transforming hex string into array of r,g,b values
+rgb_array = np.zeros( (len(data),3) )
+for i in range(len(rgb_array)):
+    red, green, blue = struct.unpack('BBB',bytes.fromhex(data[i][2:]))
+    rgb_array[i,0] = red
+    rgb_array[i,1] = green
+    rgb_array[i,2] = blue
+
+# converting white to alpha
+argb_array = rgb_white2alpha(rgb_array)
+
+# transforming array of a,r,g,b values into hex string
+hex_array = []
+for i in range(len(argb_array)):
+    hex_array.append(argb2hex(argb_array[i]))
+
+# printing the result to std out
+np.savetxt(sys.stdout, hex_array, newline='\n', fmt="%s")  
