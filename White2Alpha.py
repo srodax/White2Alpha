@@ -9,7 +9,7 @@ from matplotlib.colors import hex2color, rgb2hex
 #***********************************************************************
 # Parsing arguments
 #***********************************************************************
-parser = argparse.ArgumentParser(description='Convert white into alpha of a column of hex colors of format "0xRRGGBB". Outputs "0xAARRGGBB".')
+parser = argparse.ArgumentParser(description='Take last column of a file, which should contain hex colors of format "0xRRGGBB", and transform each color\'s white component into alpha. The last column is replaced by "0xAARRGGBB", while the others are unchaned.')
 parser.add_argument('files', type=str, nargs='*', help='Files with colors to be converted.')
 args = parser.parse_args()
 #***********************************************************************
@@ -79,11 +79,18 @@ def argb2hex(argb, alpha255isInvisible=True):
     hexstr = f'{hex(int(a))}{hex(int(r))[2:]:0>2}{hex(int(g))[2:]:0>2}{hex(int(b))[2:]:0>2}'
     return hexstr
 
+# extracting last column from data, which should contain colors
+if data.ndim > 1: # checking if we indeed have more than 1 column in our file
+    colors = data[:,-1]
+    data = np.delete(data, -1, axis=1) # we delete last column
+else:
+    colors = data
+    data = np.array(0) # if our file had only colors, we make update data to be 0-dim
 
 # transforming hex string into array of r,g,b values
-rgb_array = np.zeros( (len(data),3) )
+rgb_array = np.zeros( (len(colors),3) )
 for i in range(len(rgb_array)):
-    red, green, blue = struct.unpack('BBB',bytes.fromhex(data[i][2:]))
+    red, green, blue = struct.unpack('BBB',bytes.fromhex(colors[i][2:]))
     rgb_array[i,0] = red
     rgb_array[i,1] = green
     rgb_array[i,2] = blue
@@ -97,4 +104,5 @@ for i in range(len(argb_array)):
     hex_array.append(argb2hex(argb_array[i]))
 
 # printing the result to std out
-np.savetxt(sys.stdout, hex_array, newline='\n', fmt="%s")  
+output = np.c_[data, hex_array] if data.ndim > 0 else hex_array # we check if data is 0-dim
+np.savetxt(sys.stdout, output, newline='\n', fmt="%s")  
