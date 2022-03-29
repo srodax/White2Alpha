@@ -7,7 +7,7 @@ import argparse
 #***********************************************************************
 # Parsing arguments
 #***********************************************************************
-parser = argparse.ArgumentParser(description='Convert white into alpha in a column of hex colors.')
+parser = argparse.ArgumentParser(description='Convert white into alpha of a column of hex colors of format "0xRRGGBB". Outputs "0xAARRGGBB".')
 parser.add_argument('files', type=str, nargs='*', help='Files with colors to be converted.')
 args = parser.parse_args()
 #***********************************************************************
